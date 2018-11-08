@@ -1,6 +1,10 @@
 Java Etherpad Lite Client
 =========================
 
+
+### TRAVIS ###
+[![Build Status](https://travis-ci.org/SantiagoPazPerez/java-etherpad-lite.svg?branch=master)](https://travis-ci.org/SantiagoPazPerez/java-etherpad-lite)
+
 A Java client for Etherpad Lite’s HTTP JSON API.
 Etherpad Lite is a collaborative editor provided by the Etherpad Foundation.
 
