@@ -112,46 +112,72 @@ public class EPLiteClientIntegrationTest {
 		mockServer.when(HttpRequest.request().withMethod("POST").withPath("/api/1.2.13/deleteGroup"))
 				.respond(HttpResponse.response().withStatusCode(200)
 				.withBody("{\"code\":0,\"message\":\"ok\",\"data\":null}"));
-			client.deleteGroup(groupId);
+		client.deleteGroup(groupId);
 		}
 	}	 
 		 
-    // @Test
-    // public void create_group_pads_and_list_them() throws Exception {
-    //     Map response = client.createGroup();
-    //     String groupId = (String) response.get("groupID");
-    //     String padName1 = "integration-test-1";
-    //     String padName2 = "integration-test-2";
-    //     try {
-    //         Map padResponse = client.createGroupPad(groupId, padName1);
-    //         assertTrue(padResponse.containsKey("padID"));
-    //         String padId1 = (String) padResponse.get("padID");
-
-    //         client.setPublicStatus(padId1, true);
-    //         boolean publicStatus = (boolean) client.getPublicStatus(padId1).get("publicStatus");
-    //         assertTrue(publicStatus);
-
-    //         client.setPassword(padId1, "integration");
-    //         boolean passwordProtected = (boolean) client.isPasswordProtected(padId1).get("isPasswordProtected");
-    //         assertTrue(passwordProtected);
-
-    //         padResponse = client.createGroupPad(groupId, padName2, "Initial text");
-    //         assertTrue(padResponse.containsKey("padID"));
-
-    //         String padId = (String) padResponse.get("padID");
-    //         String initialText = (String) client.getText(padId).get("text");
-    //         assertEquals("Initial text\n", initialText);
-
-    //         Map padListResponse = client.listPads(groupId);
-
-    //         assertTrue(padListResponse.containsKey("padIDs"));
-    //         List padIds = (List) padListResponse.get("padIDs");
-
-    //         assertEquals(2, padIds.size());
-    //     } finally {
-    //         client.deleteGroup(groupId);
-    //     }
-    // }
+     @Test
+     public void create_group_pads_and_list_them() throws Exception {
+	mockServer.when(HttpRequest.request().withMethod("POST").withPath("/api/1.2.13/createGroup"))
+	        	.respond(HttpResponse.response().withStatusCode(200)
+            		.withBody("{\"code\":0,\"message\":\"ok\",\"data\":{\"groupID\":\"g.aaaaaaaaaaaaaaaa\"}}"));
+        Map response = client.createGroup();
+     	mockServer.when(HttpRequest.request().withMethod("POST").withPath("/api/1.2.13/createGroupPad"))
+	        	.respond(HttpResponse.response().withStatusCode(200)
+            		.withBody("{\"code\":0,\"message\":\"ok\",\"data\":{\"padID\":\"g.aaaaaaaaaaaaaaaa$integration-test-1\"}}"));
+    	String groupId = (String) response.get("groupID");
+	String pad1 = "integration-test-1";
+        String pad2 = "integration-test-2";
+	try {
+	     Map padResponse = client.createGroupPad(groupId, pad1);
+	     assertTrue(padResponse.containsKey("padID"));
+	     String padId1 = (String) padResponse.get("padID");
+	     mockServer.when(HttpRequest.request().withMethod("POST").withPath("/api/1.2.13/setPublicStatus"))
+	            	     .respond(HttpResponse.response().withStatusCode(200)
+                	     .withBody("{\"code\":0,\"message\":\"ok\",\"data\":null}"));
+	     mockServer.when(HttpRequest.request().withMethod("GET").withPath("/api/1.2.13/getPublicStatus"))
+	            	     .respond(HttpResponse.response().withStatusCode(200)
+                             .withBody("{\"code\":0,\"message\":\"ok\",\"data\":{\"publicStatus\":true}}"));
+	     client.setPublicStatus(padId1, true);
+	     boolean publicStatus = (boolean)
+	     client.getPublicStatus(padId1).get("publicStatus");
+	     assertTrue(publicStatus);
+	     mockServer.when(HttpRequest.request().withMethod("POST").withPath("/api/1.2.13/setPassword"))
+	            	     .respond(HttpResponse.response().withStatusCode(200)
+                             .withBody("{\"code\":0,\"message\":\"ok\",\"data\":null}"));
+	     mockServer.when(HttpRequest.request().withMethod("GET").withPath("/api/1.2.13/isPasswordProtected"))
+	            	     .respond(HttpResponse.response().withStatusCode(200)
+                             .withBody("{\"code\":0,\"message\":\"ok\",\"data\":{\"isPasswordProtected\":true}}"));
+	     client.setPassword(padId1, "integration");
+	     boolean passwordProtected = (boolean)
+	     client.isPasswordProtected(padId1).get("isPasswordProtected");
+	     assertTrue(passwordProtected);
+	     mockServer.when(HttpRequest.request().withMethod("POST").withPath("/api/1.2.13/createGroupPad"))
+	            	     .respond(HttpResponse.response().withStatusCode(200).withBody(
+	                     "{\"code\":0,\"message\":\"ok\",\"data\":{\"padID\":\"g.aaaaaaaaaaaaaaaa$integration-test-2\"}}"));
+	     padResponse = client.createGroupPad(groupId, pad2, "Initial text");
+	     assertTrue(padResponse.containsKey("padID"));
+	     mockServer.when(HttpRequest.request().withMethod("GET").withPath("/api/1.2.13/getText"))
+	           	     .respond(HttpResponse.response().withStatusCode(200)
+		       	     .withBody("{\"code\":0,\"message\":\"ok\",\"data\":{\"text\":\"Initial text\\n\"}}"));
+	     String padId = (String) padResponse.get("padID");
+	     String initialText = (String) client.getText(padId).get("text");
+	     assertEquals("Initial text\n", initialText);
+	     mockServer.when(HttpRequest.request().withMethod("GET").withPath("/api/1.2.13/listPads"))
+	                     .respond(HttpResponse.response().withStatusCode(200).withBody(
+	                     "{\"code\":0,\"message\":\"ok\",\"data\":{\"padIDs\":[\"g.12$integration-test-1\",\"g.12$integration-test-2\"]}}"));
+	     Map padListResponse = client.listPads(groupId);
+	     assertTrue(padListResponse.containsKey("padIDs"));
+	     List padIds = (List) padListResponse.get("padIDs");
+             assertEquals(2, padIds.size());
+	    } finally {
+	        mockServer.when(HttpRequest.request().withMethod("POST").withPath("/api/1.2.13/deleteGroup"))
+                	        .respond(HttpResponse.response().withStatusCode(200)
+                                .withBody("{\"code\":0,\"message\":\"ok\",\"data\":null}"));
+        
+	        client.deleteGroup(groupId);
+	}
+}
 
     // @Test
     // public void create_author() throws Exception {
