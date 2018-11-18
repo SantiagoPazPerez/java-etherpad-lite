@@ -66,7 +66,7 @@ public class EPLiteClientIntegrationTest {
         mockServer.when(HttpRequest.request().withMethod("POST").withPath("/api/1.2.13/createGroup").withBody(
             new StringBody("apikey=a04f17343b51afaa036a7428171dd873469cd85911ab43be0503d29d2acbbd58")))
 				.respond(HttpResponse.response().withStatusCode(200)
-				.withBody("{\"code\":0,\"message\":\"ok\",\"data\":{\"groupID\":\"g.ctm5zVmzeUSHLDwY\"}}"));
+				.withBody("{\"code\":0,\"message\":\"ok\",\"data\":{\"groupID\":\"g.aaaaaaaaaaaaaaa\"}}"));
 
 		Map response = client.createGroup();
 
@@ -75,36 +75,47 @@ public class EPLiteClientIntegrationTest {
         assertTrue("Unexpected groupID " + groupId, groupId != null && groupId.startsWith("g."));
         
         mockServer.when(HttpRequest.request().withMethod("POST").withPath("/api/1.2.13/deleteGroup").withBody(
-            new StringBody("apikey=a04f17343b51afaa036a7428171dd873469cd85911ab43be0503d29d2acbbd58&groupID=g.ctm5zVmzeUSHLDwY")))
+            new StringBody("apikey=a04f17343b51afaa036a7428171dd873469cd85911ab43be0503d29d2acbbd58&groupID=g.aaaaaaaaaaaaaaa")))
             .respond(HttpResponse.response().withStatusCode(200).withBody("{\"code\":0,\"message\":\"ok\",\"data\":null}"));
 
         client.deleteGroup(groupId);
     }
 
-    // @Test
-    // public void create_group_if_not_exists_for_and_list_all_groups() throws Exception {
-    //     String groupMapper = "groupname";
-
-    //     Map response = client.createGroupIfNotExistsFor(groupMapper);
-
-    //     assertTrue(response.containsKey("groupID"));
-    //     String groupId = (String) response.get("groupID");
-    //     try {
-    //         Map listResponse = client.listAllGroups();
-    //         assertTrue(listResponse.containsKey("groupIDs"));
-    //         int firstNumGroups = ((List) listResponse.get("groupIDs")).size();
-
-    //         client.createGroupIfNotExistsFor(groupMapper);
-
-    //         listResponse = client.listAllGroups();
-    //         int secondNumGroups = ((List) listResponse.get("groupIDs")).size();
-
-    //         assertEquals(firstNumGroups, secondNumGroups);
-    //     } finally {
-    //         client.deleteGroup(groupId);
-    //     }
-    // }
-
+     @Test
+     public void create_group_if_not_exists_for_and_list_all_groups() throws Exception {
+         String groupMapper = "groupname";
+	 mockServer.when(HttpRequest.request().withMethod("POST").withPath("/api/1.2.13/createGroupIfNotExistsFor"))
+			.respond(HttpResponse.response().withStatusCode(200)
+			.withBody("{\"code\":0,\"message\":\"ok\",\"data\":{\"groupID\":\"g.aaaaaaaaaaaaaaa\"}}"));
+	 Map response = client.createGroupIfNotExistsFor(groupMapper);
+    	 assertTrue(response.containsKey("groupID"));
+	 String groupId = (String) response.get("groupID");
+	 mockServer.when(HttpRequest.request().withMethod("GET").withPath("/api/1.2.13/listAllGroups"))
+			.respond(HttpResponse.response().withStatusCode(200)
+			.withBody("{\"code\":0,\"message\":\"ok\",\"data\":{\"groupIDs\":[\"g.aaaaaaaaaaaaaaa\"]}}"));
+	     
+	 try {
+		Map listResponse = client.listAllGroups();
+		assertTrue(listResponse.containsKey("groupIDs"));
+		int firstNumGroups = ((List) listResponse.get("groupIDs")).size();    
+		mockServer.when(HttpRequest.request().withMethod("POST").withPath("/api/1.2.13/createGroupIfNotExistsFor"))
+				.respond(HttpResponse.response().withStatusCode(200)
+				.withBody("{\"code\":0,\"message\":\"ok\",\"data\":{\"groupID\":\"g.aaaaaaaaaaaaaaa\"}}"));
+	        client.createGroupIfNotExistsFor(groupMapper);
+		mockServer.when(HttpRequest.request().withMethod("GET").withPath("/api/1.2.13/listAllGroups"))
+				.respond(HttpResponse.response().withStatusCode(200)
+				.withBody("{\"code\":0,\"message\":\"ok\",\"data\":{\"groupIDs\":[\"g.aaaaaaaaaaaaaaa\"]}}")); 
+		listResponse = client.listAllGroups();
+		int secondNumGroups = ((List) listResponse.get("groupIDs")).size();
+		assertEquals(firstNumGroups, secondNumGroups); 
+	} finally {	 
+		mockServer.when(HttpRequest.request().withMethod("POST").withPath("/api/1.2.13/deleteGroup"))
+				.respond(HttpResponse.response().withStatusCode(200)
+				.withBody("{\"code\":0,\"message\":\"ok\",\"data\":null}"));
+			client.deleteGroup(groupId);
+		}
+	}	 
+		 
     // @Test
     // public void create_group_pads_and_list_them() throws Exception {
     //     Map response = client.createGroup();
