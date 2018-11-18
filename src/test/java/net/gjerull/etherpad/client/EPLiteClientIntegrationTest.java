@@ -14,6 +14,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.integration.ClientAndServer;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
+import org.mockserver.model.StringBody;
 
 /**
  * Integration test for simple App.
@@ -33,7 +34,8 @@ public class EPLiteClientIntegrationTest {
                 "http://localhost:9001",
                 "a04f17343b51afaa036a7428171dd873469cd85911ab43be0503d29d2acbbd58"
         );
-        mockServer = startClientAndServer(9001);
+        
+        this.mockServer = startClientAndServer(9001);
     }
 
     @After
@@ -59,16 +61,25 @@ public class EPLiteClientIntegrationTest {
         client.checkToken();
     }
 
-    // @Test
-    // public void create_and_delete_group() throws Exception {
-    //     Map response = client.createGroup();
+    @Test
+    public void create_and_delete_group() throws Exception {
+        mockServer.when(HttpRequest.request().withMethod("POST").withPath("/api/1.2.13/createGroup").withBody(
+            new StringBody("apikey=a04f17343b51afaa036a7428171dd873469cd85911ab43be0503d29d2acbbd58")))
+				.respond(HttpResponse.response().withStatusCode(200)
+				.withBody("{\"code\":0,\"message\":\"ok\",\"data\":{\"groupID\":\"g.ctm5zVmzeUSHLDwY\"}}"));
 
-    //     assertTrue(response.containsKey("groupID"));
-    //     String groupId = (String) response.get("groupID");
-    //     assertTrue("Unexpected groupID " + groupId, groupId != null && groupId.startsWith("g."));
+		Map response = client.createGroup();
 
-    //     client.deleteGroup(groupId);
-    // }
+		assertTrue(response.containsKey("groupID"));
+		String groupId = (String) response.get("groupID");
+        assertTrue("Unexpected groupID " + groupId, groupId != null && groupId.startsWith("g."));
+        
+        mockServer.when(HttpRequest.request().withMethod("POST").withPath("/api/1.2.13/deleteGroup").withBody(
+            new StringBody("apikey=a04f17343b51afaa036a7428171dd873469cd85911ab43be0503d29d2acbbd58&groupID=g.ctm5zVmzeUSHLDwY")))
+            .respond(HttpResponse.response().withStatusCode(200).withBody("{\"code\":0,\"message\":\"ok\",\"data\":null}"));
+
+        client.deleteGroup(groupId);
+    }
 
     // @Test
     // public void create_group_if_not_exists_for_and_list_all_groups() throws Exception {
